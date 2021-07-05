@@ -2,7 +2,10 @@
 
 hyper::hyper(QObject *parent) :
     QObject(parent),
-    m_connection(NULL)
+    m_connection(NULL),
+    m_tc(0),
+    m_clip_len(0),
+    m_clips(1)
 {
     m_server = new QTcpServer(this);
     if (!m_server->listen(QHostAddress::AnyIPv4, 9993)) {
@@ -22,7 +25,37 @@ void hyper::setTimecode(int tc)
     m_tc=tc;
 }
 
-void hyper::onReadyRead() {
+void hyper::setDuration(int du)
+{
+    m_clip_len=du;
+}
+
+void hyper::writeResponse(QString key, QString val)
+{
+    m_connection->write(key.toLocal8Bit());
+    m_connection->write(": ");
+    m_connection->write(val.toLocal8Bit());
+    m_connection->write("\r\n");
+}
+
+void hyper::writeResponse(QString key, bool val)
+{
+    m_connection->write(key.toLocal8Bit());
+    m_connection->write(": ");
+    m_connection->write(val ? "true" : "false");
+    m_connection->write("\r\n");
+}
+
+void hyper::writeResponse(QString key, int val)
+{
+    m_connection->write(key.toLocal8Bit());
+    m_connection->write(": ");
+    m_connection->write(QByteArray::number(val));
+    m_connection->write("\r\n");
+}
+
+void hyper::onReadyRead()
+{
     while (m_connection->canReadLine()) {
         QByteArray ba = m_connection->readLine();
         qDebug() << ba;
@@ -65,22 +98,17 @@ void hyper::onReadyRead() {
 
             QTime tc(0,0,0);
             tc=tc.addSecs(m_tc);
-            QString stc=tc.toString("hh:mm:ss");
+            QString stc=tc.toString("00:hh:mm:ss");
 
             qDebug() << "tc" << stc << m_status;
 
             m_connection->write("208 transport info:\r\n");
-            m_connection->write("status: ");
-            m_connection->write(m_status.toLocal8Bit());
-            m_connection->write("\r\n");
-            m_connection->write("speed: 0\r\n");
+            writeResponse("status", m_status);
+            writeResponse("speed", m_speed);
+
             m_connection->write("slot id: 1\r\n");
-            m_connection->write("display timecode: 01:");
-            m_connection->write(stc.toLocal8Bit());
-            m_connection->write("\r\n");
-            m_connection->write("timecode: 00:\r\n");
-            m_connection->write(stc.toLocal8Bit());
-            m_connection->write("\r\n");
+            writeResponse("display timecode: ", stc);
+            writeResponse("timecode: ", stc);
             m_connection->write("clip id: 1\r\n");
             m_connection->write("single clip: true\r\n");
             m_connection->write("video format: 1080p30\r\n");
@@ -88,16 +116,37 @@ void hyper::onReadyRead() {
             m_connection->write("\r\n");
 
         } else if (ba.startsWith("clips count")) {
-            qDebug() << "clips response";
+            qDebug() << "clips count response";
             m_connection->write("214 clips count:\r\n");
             m_connection->write("clip count: 1\r\n");
             m_connection->write("\r\n");
 
+        } else if (ba.startsWith("clips get")) {
+            qDebug() << "clips get response";
+
+            QTime tc(0,0,0);
+            tc=tc.addSecs(m_clip_len);
+            QString stc=tc.toString("00:hh:mm:ss");
+
+            m_connection->write("205 clips info:\r\n");
+            m_connection->write("clip count: 1\r\n");
+            m_connection->write("1: media.mov H.264High 1080p30 00:00:00:00 ");
+            m_connection->write(stc.toLocal8Bit());
+            m_connection->write("\r\n");
+            m_connection->write("\r\n");
+
         } else if (ba.startsWith("disk list")) {
             qDebug() << "disk response";
+
+            QTime tc(0,0,0);
+            tc=tc.addSecs(m_clip_len);
+            QString stc=tc.toString("00:hh:mm:ss");
+
             m_connection->write("206 disk list:\r\n");
             m_connection->write("slot id: 1\r\n");
-//            m_connection->write("slot id: 1\r\n");
+            m_connection->write("1: media.mov H.264High 1080p30 00:00:00:00 ");
+            m_connection->write(stc.toLocal8Bit());
+            m_connection->write("\r\n");
             m_connection->write("\r\n");
 
         } else if (ba.startsWith("slot info: slot id: 1")) {
@@ -129,6 +178,9 @@ void hyper::onReadyRead() {
             m_connection->write("recording time: 36000\r\n");
             m_connection->write("video format: 1080p30\r\n");
             m_connection->write("\r\n");
+
+        } else if (ba.startsWith("goto")) {
+            m_connection->write("200 ok\r\n");
 
         } else if (ba.startsWith("help")) {
             m_connection->write("200 ok\r\n");
@@ -164,6 +216,7 @@ void hyper::newConnection() {
         m_connection->write("500 connection info:\r\n");
         m_connection->write("protocol version: 1.9\r\n");
         m_connection->write("model: HyperDeck Studio Mini\r\n");
+        m_connection->write("unique id: 123456789\r\n");
         m_connection->write("\r\n");
         connect(m_connection, SIGNAL(disconnected()), this, SLOT(disconnectRemoteAccess()));
         connect(m_connection, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
