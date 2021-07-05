@@ -2,8 +2,9 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Layouts 1.12
 import QtMultimedia 5.12
-
 import QtQuick.Controls 2.12
+
+import org.tal.hyperhyper 1.0
 
 ApplicationWindow {
     width: 800
@@ -75,16 +76,34 @@ ApplicationWindow {
         source: "file:///home/milang/Videos/vj.mp4"
         autoLoad: true
         loops: 1
+        onPlaying: {
+            hs.setStatus("playing")
+        }
+        onStopped: {
+            hs.setStatus("stopped")
+        }
+        onPaused: {
+            hs.setStatus("stopped")
+        }
+        onPositionChanged: {
+            hs.setTimecode(position/1000);
+        }
     }
 
-    Connections {
-        target: hyper
+    HyperServer {
+        id: hs
         onPlay: {
-            mp.play()
+            console.debug("PLAY")
+            mp.play();
         }
-
+        onRecord: {
+            console.debug("RECORD")
+            hs.setStatus("stopped")
+        }
         onStop: {
-            mp.stop()
+            console.debug("STOP")
+            mp.stop();
         }
     }
+
 }

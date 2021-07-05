@@ -11,6 +11,17 @@ hyper::hyper(QObject *parent) :
     connect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
+void hyper::setStatus(QString status)
+{
+    m_status=status;
+    emit statusChanged();
+}
+
+void hyper::setTimecode(int tc)
+{
+    m_tc=tc;
+}
+
 void hyper::onReadyRead() {
     while (m_connection->canReadLine()) {
         QByteArray ba = m_connection->readLine();
@@ -29,6 +40,11 @@ void hyper::onReadyRead() {
 
             emit play();
             m_connection->write("200 ok\r\n");
+        } else if (ba.startsWith("record")) {
+            qDebug() << "record";
+
+            emit record();
+            m_connection->write("200 ok\r\n");
         } else if (ba.startsWith("stop")) {
             qDebug() << "stop";
 
@@ -46,12 +62,25 @@ void hyper::onReadyRead() {
 
         } else if (ba.startsWith("transport info")) {
             qDebug() << "transport response";
+
+            QTime tc(0,0,0);
+            tc=tc.addSecs(m_tc);
+            QString stc=tc.toString("hh:mm:ss");
+
+            qDebug() << "tc" << stc << m_status;
+
             m_connection->write("208 transport info:\r\n");
-            m_connection->write("status: stopped\r\n");
+            m_connection->write("status: ");
+            m_connection->write(m_status.toLocal8Bit());
+            m_connection->write("\r\n");
             m_connection->write("speed: 0\r\n");
             m_connection->write("slot id: 1\r\n");
-            m_connection->write("display timecode: 01:00:00:00\r\n");
-            m_connection->write("timecode: 00:00:00:00\r\n");
+            m_connection->write("display timecode: 01:");
+            m_connection->write(stc.toLocal8Bit());
+            m_connection->write("\r\n");
+            m_connection->write("timecode: 00:\r\n");
+            m_connection->write(stc.toLocal8Bit());
+            m_connection->write("\r\n");
             m_connection->write("clip id: 1\r\n");
             m_connection->write("single clip: true\r\n");
             m_connection->write("video format: 1080p30\r\n");
