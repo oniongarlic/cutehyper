@@ -33,8 +33,9 @@ private slots:
     void newConnection();
 
 private:
-    QTcpServer *m_server;
-    QTcpSocket *m_connection;
+    QTcpServer *m_server;    
+
+    uint m_connections;
 
     QString m_status;
     int m_tc;
@@ -43,9 +44,14 @@ private:
 
     int m_clip_len;
 
-    void writeResponse(QString key, QString val);
-    void writeResponse(QString key, bool val);
-    void writeResponse(QString key, int val);
+    bool m_slot_1;
+    bool m_slot_2;
+
+    int m_clip;
+
+    void writeResponse(QTcpSocket *con, QString key, QString val);
+    void writeResponse(QTcpSocket *con, QString key, bool val);
+    void writeResponse(QTcpSocket *con, QString key, int val);
 };
 
 #endif // HYPER_H
