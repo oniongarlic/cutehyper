@@ -10,6 +10,7 @@ import org.tal.hyperhyper 1.0
 Page {
     id: mainPage
     objectName: "main"
+    focus: true
 
     property bool fullScreen: false
 
@@ -92,7 +93,8 @@ Page {
         id: ms
 
         onFileSelected: {
-            mp.source=src;            
+            mp.source=src;
+            mp.pause();
         }
     }
 
@@ -101,11 +103,20 @@ Page {
     }
 
     Keys.onLeftPressed: {
+        mp.seek(0)
 
     }
 
     Keys.onRightPressed: {
         mp.play();
+    }
+
+    Keys.onSpacePressed: {
+        console.debug("SPACE")
+        if (mp.playbackState==MediaPlayer.PlayingState)
+            mp.pause();
+        else
+            mp.play();
     }
 
     VideoOutput {
@@ -118,6 +129,7 @@ Page {
         anchors.fill: parent
         onClicked: {
             fullScreen=!fullScreen
+            mainPage.focus=true
         }
     }
 
