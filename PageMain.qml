@@ -15,10 +15,7 @@ Page {
     property bool fullScreen: false
 
     background: Rectangle {
-        gradient: Gradient {
-            GradientStop { position: 0; color: "#af9090" }
-            GradientStop { position: 1; color: "#605050" }
-        }
+        color: bgBlack.checked ? "black" : "green"
     }       
 
     header: MenuBar {
@@ -34,8 +31,15 @@ Page {
             }
 
             MenuItem {
+                text: "Clear"
+                onClicked: {
+                    mp.source=""
+                }
+            }
+
+            MenuItem {
                 text: "Play"
-                enabled: mp.playbackState!=MediaPlayer.PlayingState
+                enabled: mp.playbackState!=MediaPlayer.PlayingState && mp.status!=MediaPlayer.NoMedia
                 onClicked: {
                     mp.play();
                 }
@@ -62,6 +66,15 @@ Page {
                 onClicked: {
                     Qt.quit()
                 }
+            }
+        }
+        Menu {
+            title: "Background"
+
+            MenuItem {
+                id: bgBlack
+                text: "Black"
+                checkable: true
             }
         }
     }
