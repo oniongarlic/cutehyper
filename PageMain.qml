@@ -95,6 +95,8 @@ Page {
         onFileSelected: {
             mp.source=src;
             mp.pause();
+            mainPage.forceActiveFocus();
+            hs.setClips(1)
         }
     }
 
@@ -129,7 +131,7 @@ Page {
         anchors.fill: parent
         onClicked: {
             fullScreen=!fullScreen
-            mainPage.focus=true
+            mainPage.forceActiveFocus();
         }
     }
 

@@ -5,7 +5,7 @@ hyper::hyper(QObject *parent) :
     m_connections(0),
     m_tc(0),
     m_clip_len(0),
-    m_clips(1)
+    m_clips(0)
 {
     m_server = new QTcpServer(this);
     if (!m_server->listen(QHostAddress::AnyIPv4, 9993)) {
@@ -30,6 +30,11 @@ void hyper::setTimecode(int tc)
 void hyper::setDuration(int du)
 {
     m_clip_len=du;
+}
+
+void hyper::setClips(int clips)
+{
+    m_clips=clips;
 }
 
 void hyper::writeResponse(QTcpSocket *con, QString key, QString val)
@@ -71,7 +76,7 @@ void hyper::onReadyRead()
         } else if (ba.startsWith("ping")) {
             qDebug() << "ping";
 
-             con->write("200 ok\r\n");
+            con->write("200 ok\r\n");
         } else if (ba.startsWith("play")) {
             qDebug() << "play";
 
@@ -113,7 +118,10 @@ void hyper::onReadyRead()
             con->write("slot id: 1\r\n");
             writeResponse(con, "display timecode: ", stc);
             writeResponse(con, "timecode: ", stc);
-            con->write("clip id: 1\r\n");
+            if (m_clips>0)
+                writeResponse(con, "clip id", 1);
+            else
+                writeResponse(con, "clip id", "none");
             con->write("single clip: true\r\n");
             con->write("video format: 1080p30\r\n");
             con->write("loop: false\r\n");
@@ -121,8 +129,8 @@ void hyper::onReadyRead()
 
         } else if (ba.startsWith("clips count")) {
             qDebug() << "clips count response";
-            con->write("214 clips count:\r\n");
-            con->write("clip count: 1\r\n");
+            con->write("214 clips count:\r\n");            
+            writeResponse(con, "clip count", m_clips);
             con->write("\r\n");
 
         } else if (ba.startsWith("clips get")) {
@@ -133,10 +141,12 @@ void hyper::onReadyRead()
             qDebug() << "clips get response" << m_clip_len << stc;
 
             con->write("205 clips info:\r\n");
-            con->write("clip count: 1\r\n");
-            con->write("1: media.mov H.264High 1080p30 00:00:00:00 ");
-            con->write(stc.toLocal8Bit());
-            con->write("\r\n");
+            writeResponse(con, "clip count", m_clips);
+            if (m_clips>0) {
+                con->write("1: media.mov H.264High 1080p30 00:00:00:00 ");
+                con->write(stc.toLocal8Bit());
+                con->write("\r\n");
+            }
             con->write("\r\n");
 
         } else if (ba.startsWith("disk list")) {

@@ -16,6 +16,7 @@ public:
     Q_INVOKABLE void setStatus(QString status);
     Q_INVOKABLE void setTimecode(int tc);
     Q_INVOKABLE void setDuration(int du);
+    Q_INVOKABLE void setClips(int clips);
 
 signals:
     void play();
