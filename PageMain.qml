@@ -16,7 +16,7 @@ Page {
 
     background: Rectangle {
         color: bgBlack.checked ? "black" : "green"
-    }       
+    }
 
     header: MenuBar {
         visible: !fullScreen
@@ -33,7 +33,7 @@ Page {
             MenuItem {
                 text: "Clear"
                 onClicked: {
-                    mp.source=""
+                    plist.clear()
                 }
             }
 
@@ -95,6 +95,12 @@ Page {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignLeft
             }
+            Label {
+                id: itemsMsg
+                text: 1+plist.currentIndex+"/"+plist.itemCount
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignLeft
+            }
         }
     }
 
@@ -106,7 +112,7 @@ Page {
         id: ms
 
         onFileSelected: {
-            mp.source=src;
+            plist.addItem(src)
             mp.pause();
             mainPage.forceActiveFocus();
             hs.setClips(1)
@@ -116,14 +122,25 @@ Page {
     Keys.onEscapePressed: {
         mp.stop();
     }
-
     Keys.onLeftPressed: {
-        mp.seek(0)
-
+        console.debug("Left")
+        plist.previous();
     }
-
     Keys.onRightPressed: {
-        mp.play();
+        console.debug("Right")
+        plist.next()
+    }
+    Keys.onDigit1Pressed: {
+        plist.currentIndex=0;
+    }
+    Keys.onDigit2Pressed: {
+        plist.currentIndex=1;
+    }
+    Keys.onDigit3Pressed: {
+        plist.currentIndex=2;
+    }
+    Keys.onDigit0Pressed: {
+        plist.shuffle();
     }
 
     Keys.onSpacePressed: {
@@ -134,23 +151,35 @@ Page {
             mp.play();
     }
 
-    VideoOutput {
-        id: vo
+    ColumnLayout {
         anchors.fill: parent
-        source: mp
-    }
+        VideoOutput {
+            id: vo
+            source: mp
+            Layout.fillHeight: true
+            Layout.fillWidth: true
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: {
-            fullScreen=!fullScreen
-            mainPage.forceActiveFocus();
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    fullScreen=!fullScreen
+                    mainPage.forceActiveFocus();
+                }
+            }
+        }
+        ListView {
+            Layout.fillHeight: true
+            visible: !fullScreen
+            model: plist
+            delegate: Text {
+                text: source
+            }
         }
     }
 
     MediaPlayer {
         id: mp
-        // source: ""
+        playlist: plist
         autoLoad: true
         loops: 1 // hs.loops
         // playbackRate: hs.speed/100
@@ -173,6 +202,12 @@ Page {
         onStatusChanged: console.debug(status)
     }
 
+    Playlist {
+        id: plist
+        playbackMode: Playlist.CurrentItemOnce
+
+    }
+
     HyperServer {
         id: hs
         onPlay: {
@@ -186,6 +221,13 @@ Page {
         onStop: {
             console.debug("STOP")
             mp.stop();
+        }
+        onLoopChanged: {
+            if (loop>1) {
+                plist.playbackMode=Playlist.CurrentItemInLoop
+            } else {
+                plist.playbackMode=Playlist.CurrentItemOnce
+            }
         }
     }
 }

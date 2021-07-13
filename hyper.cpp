@@ -1,11 +1,14 @@
 #include "hyper.h"
 
+#include <QMediaPlayer>
+
 hyper::hyper(QObject *parent) :
     QObject(parent),
     m_connections(0),
     m_tc(0),
     m_clip_len(0),
-    m_clips(0)
+    m_clips(0),
+    m_loop(0)
 {
     m_server = new QTcpServer(this);
     if (!m_server->listen(QHostAddress::AnyIPv4, 9993)) {

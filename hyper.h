@@ -9,6 +9,7 @@ class hyper : public QObject
     Q_OBJECT
     Q_PROPERTY(QString status MEMBER m_status NOTIFY statusChanged)
     Q_PROPERTY(int speed MEMBER m_speed NOTIFY speedChanged)
+    Q_PROPERTY(int loop MEMBER m_loop NOTIFY loopChanged)
 
 public:
     explicit hyper(QObject *parent = nullptr);
@@ -25,6 +26,7 @@ signals:
 
     void statusChanged();
     void speedChanged();
+    void loopChanged();
 
 protected slots:
 
@@ -49,6 +51,7 @@ private:
     bool m_slot_2;
 
     int m_clip;
+    int m_loop;
 
     void writeResponse(QTcpSocket *con, QString key, QString val);
     void writeResponse(QTcpSocket *con, QString key, bool val);
