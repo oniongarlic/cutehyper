@@ -7,6 +7,7 @@ Item {
     id: igs
 
     signal fileSelected(string src);
+    signal filesSelected(var src);
 
     function startSelector() {
         filesDialog.open();
@@ -16,14 +17,19 @@ Item {
         id: filesDialog
         folder: shortcuts.pictures
         nameFilters: [ "*.mp4", "*.mov", "*.mp3", "*.avi" ]
-        title: qsTr("Select image file")
+        title: qsTr("Select media file(s)")
         selectExisting: true
         selectFolder: false
-        selectMultiple: false
+        selectMultiple: true
         onAccepted: {
             // XXX: Need to convert to string, otherwise sucka
-            var f=""+fileUrl
-            fileSelected(f);
+            if (fileUrl!="") {
+                var f=""+fileUrl
+                fileSelected(f);
+            } else {
+                console.debug(fileUrls)
+                filesSelected(fileUrls)
+            }
         }
     }
 }

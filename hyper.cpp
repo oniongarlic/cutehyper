@@ -5,9 +5,9 @@
 hyper::hyper(QObject *parent) :
     QObject(parent),
     m_connections(0),
-    m_tc(0),
-    m_clip_len(0),
+    m_tc(0),    
     m_clips(0),
+    m_clip_len(0),
     m_loop(0)
 {
     m_server = new QTcpServer(this);
@@ -145,7 +145,7 @@ void hyper::onReadyRead()
 
             con->write("205 clips info:\r\n");
             writeResponse(con, "clip count", m_clips);
-            if (m_clips>0) {
+            if (m_clips>0) {                
                 con->write("1: media.mov H.264High 1080p30 00:00:00:00 ");
                 con->write(stc.toLocal8Bit());
                 con->write("\r\n");
