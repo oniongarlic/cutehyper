@@ -1,7 +1,5 @@
 #include "hyper.h"
 
-#include <QMediaPlayer>
-
 hyper::hyper(QObject *parent) :
     QObject(parent),
     m_connections(0),
@@ -10,6 +8,7 @@ hyper::hyper(QObject *parent) :
     m_clip_len(0),
     m_loop(0)
 {
+    m_playlist = new QMediaPlaylist(this);
     m_server = new QTcpServer(this);
     if (!m_server->listen(QHostAddress::AnyIPv4, 9993)) {
         qWarning() << "Unable to start the server: " << m_server->errorString();
@@ -71,31 +70,36 @@ void hyper::onReadyRead()
     while (con->canReadLine()) {
         QByteArray ba = con->readLine();
         qDebug() << ba;
-        if (ba.startsWith("quit")) {
+
+        auto cmdp= ba.split(' ');
+        QByteArray cmd=cmdp.at(0);
+        qDebug() << cmd << cmdp;
+
+        if (cmd.startsWith("quit")) {
             con->write("200 ok\r\n");
             disconnectRemoteAccess();
             m_server->close();
             return;
-        } else if (ba.startsWith("ping")) {
+        } else if (cmd.startsWith("ping")) {
             qDebug() << "ping";
 
             con->write("200 ok\r\n");
-        } else if (ba.startsWith("play")) {
+        } else if (cmd.startsWith("play")) {
             qDebug() << "play";
 
             emit play();
             con->write("200 ok\r\n");
-        } else if (ba.startsWith("record")) {
+        } else if (cmd.startsWith("record")) {
             qDebug() << "record";
 
             emit record();
             con->write("200 ok\r\n");
-        } else if (ba.startsWith("stop")) {
+        } else if (cmd.startsWith("stop")) {
             qDebug() << "stop";
 
             emit stop();
             con->write("200 ok\r\n");
-        } else if (ba.startsWith("notify:")) {
+        } else if (cmd.startsWith("notify:")) {
             qDebug() << "notify response";
 
             con->write("209 notify:\r\n");
@@ -105,7 +109,7 @@ void hyper::onReadyRead()
             con->write("configuration: false\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("transport info")) {
+        } else if (cmd.startsWith("transport info")) {
             qDebug() << "transport response";
 
             QTime tc(0,0,0);
@@ -130,13 +134,13 @@ void hyper::onReadyRead()
             con->write("loop: false\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("clips count")) {
+        } else if (cmd.startsWith("clips count")) {
             qDebug() << "clips count response";
             con->write("214 clips count:\r\n");            
             writeResponse(con, "clip count", m_clips);
             con->write("\r\n");
 
-        } else if (ba.startsWith("clips get")) {
+        } else if (cmd.startsWith("clips get")) {
             QTime tc(0,0,0);
             tc=tc.addSecs(m_clip_len);
             QString stc=tc.toString("00:hh:mm:ss");
@@ -152,7 +156,7 @@ void hyper::onReadyRead()
             }
             con->write("\r\n");
 
-        } else if (ba.startsWith("disk list")) {
+        } else if (cmd.startsWith("disk list")) {
             qDebug() << "disk response";
 
             QTime tc(0,0,0);
@@ -166,7 +170,7 @@ void hyper::onReadyRead()
             con->write("\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("slot info: slot id: 1")) {
+        } else if (cmd.startsWith("slot info: slot id: 1")) {
             qDebug() << "slot 1 response";
             con->write("202 slot info:\r\n");
             con->write("slot id: 1\r\n");
@@ -176,7 +180,7 @@ void hyper::onReadyRead()
             con->write("video format: 1080p30\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("slot info: slot id: 2")) {
+        } else if (cmd.startsWith("slot info: slot id: 2")) {
             qDebug() << "slot 2 response";
             con->write("202 slot info:\r\n");
             con->write("slot id: 2\r\n");
@@ -186,7 +190,7 @@ void hyper::onReadyRead()
             con->write("video format: 1080p30\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("slot info")) {
+        } else if (cmd.startsWith("slot info")) {
             qDebug() << "slot 0 response";
             con->write("202 slot info:\r\n");
             con->write("slot id: 1\r\n");
@@ -196,13 +200,13 @@ void hyper::onReadyRead()
             con->write("video format: 1080p30\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("goto")) {
+        } else if (cmd.startsWith("goto")) {
             con->write("200 ok\r\n");
 
-        } else if (ba.startsWith("help")) {
+        } else if (cmd.startsWith("help")) {
             con->write("200 ok\r\n");
 
-        } else if (ba.startsWith("remote")) {
+        } else if (cmd.startsWith("remote")) {
             qDebug() << "remote response";
 
             con->write("210 remote info:\r\n");
@@ -210,7 +214,7 @@ void hyper::onReadyRead()
             con->write("override: false\r\n");
             con->write("\r\n");
 
-        } else if (ba.startsWith("configuration")) {
+        } else if (cmd.startsWith("configuration")) {
             con->write("211 configuration:\r\n");
             con->write("audio input: embedded\r\n");
             con->write("video input: HDMI\r\n");
