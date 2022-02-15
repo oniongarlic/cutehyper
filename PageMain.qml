@@ -1,11 +1,9 @@
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Layouts 1.12
+import QtQuick 2.15
+import QtQuick.Window 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
+import QtQuick.Layouts 1.15
 import QtMultimedia 5.12
-
-import org.tal.hyperhyper 1.0
 
 Page {
     id: mainPage
@@ -13,34 +11,7 @@ Page {
     focus: true
 
     property bool fullScreen: false
-
-    background: Rectangle {
-        color: bgBlack.checked ? "black" : "green"
-    }
-
-    Drawer {
-        id: playlistDrawer
-        height: root.height
-        width: root.width/3
-        dragMargin: rootStack.depth > 1 ? 0 : Qt.styleHints.startDragDistance
-        enabled: !fullScreen
-        ColumnLayout {
-            anchors.fill: parent
-            ListView {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                visible: !fullScreen
-                model: plist
-                clip: true
-                delegate: Row {
-                    Text {
-                        text: source
-                    }
-                }
-                ScrollIndicator.vertical: ScrollIndicator { }
-            }
-        }
-    }
+    property alias bgblack: bgBlack.checked
 
     header: MenuBar {
         visible: !fullScreen
@@ -55,14 +26,14 @@ Page {
             }
 
             MenuItem {
-                text: "Open..."
+                text: "Open playlist"
                 onClicked: {
                     plist.load("file:///tmp/playlist.m3u8", "m3u8")
                 }
             }
 
             MenuItem {
-                text: "Save..."
+                text: "Save playlist"
                 onClicked: {
                     plist.save("file:///tmp/playlist.m3u8", "m3u8")
                 }
@@ -115,9 +86,18 @@ Page {
             }
             Label {
                 id: itemsMsg
-                text: 1+plist.currentIndex+"/"+plist.itemCount
+                text: 1+plist.currentIndex+" / "+plist.itemCount
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignLeft
+            }
+            Label {
+                id: itemTime
+                text: formatSeconds(mp.position/1000)+" / "+formatSeconds(mp.duration/1000)
+            }
+            CheckBox {
+                id: checkMuted
+                text: "Mute"
+                checked: mp.muted
             }
             ToolButton {
                 text: "Play"
@@ -151,6 +131,29 @@ Page {
                 onClicked: {
                     nextMediaFile();
                 }
+            }
+        }
+    }
+
+    GridLayout {
+        anchors.fill: parent
+
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            ListView {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                model: plist
+                clip: true
+                delegate: Row {
+                    spacing: 4
+                    Text {
+                        text: source
+                    }
+                }
+                highlight: Rectangle { color: "#f0f0f0"; }
+                ScrollIndicator.vertical: ScrollIndicator { }
             }
         }
     }
@@ -190,116 +193,6 @@ Page {
         }
     }
 
-    Keys.onEscapePressed: {
-        mp.stop();
-    }
-    Keys.onLeftPressed: {
-        console.debug("Left")
-        plist.previous();
-    }
-    Keys.onRightPressed: {
-        console.debug("Right")
-        plist.next()
-    }
-    Keys.onDigit1Pressed: {
-        plist.currentIndex=0;
-    }
-    Keys.onDigit2Pressed: {
-        plist.currentIndex=1;
-    }
-    Keys.onDigit3Pressed: {
-        plist.currentIndex=2;
-    }
-    Keys.onDigit0Pressed: {
-        plist.shuffle();
-    }
-
-    Keys.onSpacePressed: {
-        console.debug("SPACE")
-        if (mp.playbackState==MediaPlayer.PlayingState)
-            mp.pause();
-        else
-            mp.play();
-    }
-
-    ColumnLayout {
-        anchors.fill: parent
-        VideoOutput {
-            id: vo
-            source: mp
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            autoOrientation: true
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    fullScreen=!fullScreen
-                    mainPage.forceActiveFocus();
-                }
-            }
-        }
-
-    }
-
-    MediaPlayer {
-        id: mp
-        playlist: plist
-        autoLoad: true
-        loops: 1 // hs.loops
-        // playbackRate: hs.speed/100
-        onPlaying: {
-            hs.setStatus("playing")
-        }
-        onStopped: {
-            hs.setStatus("stopped")
-        }
-        onPaused: {
-            hs.setStatus("stopped")
-        }
-        onPositionChanged: {
-            hs.setTimecode(position);
-        }
-        onDurationChanged: {
-            hs.setDuration(duration)
-        }
-
-        onStatusChanged: console.debug(status)
-    }
-
-    Playlist {
-        id: plist
-        playbackMode: Playlist.CurrentItemOnce
-        onLoaded: {
-            console.debug("Playlist loaded: "+itemCount)
-        }
-        onLoadFailed: {
-            console.debug(errorString)
-        }        
-    }
-
-    HyperServer {
-        id: hs        
-        onPlay: {
-            console.debug("PLAY")
-            mp.play();
-        }
-        onRecord: {
-            console.debug("RECORD")
-            hs.setStatus("stopped")
-        }
-        onStop: {
-            console.debug("STOP")
-            mp.stop();
-        }
-        onLoopChanged: {
-            if (loop>1) {
-                plist.playbackMode=Playlist.CurrentItemInLoop
-            } else {
-                plist.playbackMode=Playlist.CurrentItemOnce
-            }
-        }
-    }
 }
 
 

@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QtNetwork>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
 
 class hyper : public QObject
 {
@@ -18,6 +20,8 @@ public:
     Q_INVOKABLE void setTimecode(int tc);
     Q_INVOKABLE void setDuration(int du);
     Q_INVOKABLE void setClips(int clips);
+
+    Q_INVOKABLE QMediaPlaylist *getPlaylist(void) { return m_playlist; };
 
 signals:
     void play();
@@ -36,7 +40,8 @@ private slots:
     void newConnection();
 
 private:
-    QTcpServer *m_server;    
+    QTcpServer *m_server;
+    QMediaPlaylist *m_playlist;
 
     uint m_connections;
 
@@ -51,7 +56,7 @@ private:
     bool m_slot_2;
 
     int m_clip;
-    int m_loop;
+    int m_loop;        
 
     void writeResponse(QTcpSocket *con, QString key, QString val);
     void writeResponse(QTcpSocket *con, QString key, bool val);
