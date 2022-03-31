@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>MediaSelector.qml</file>
         <file>PageMain.qml</file>
+        <file>VideoWindow.qml</file>
     </qresource>
 </RCC>

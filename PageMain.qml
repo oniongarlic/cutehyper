@@ -136,9 +136,11 @@ Page {
     }
 
     GridLayout {
+        id: gd
         anchors.fill: parent
 
         ColumnLayout {
+            id: cl
             Layout.fillHeight: true
             Layout.fillWidth: true
             ListView {
@@ -146,16 +148,58 @@ Page {
                 Layout.fillWidth: true
                 model: plist
                 clip: true
-                delegate: Row {
-                    spacing: 4
-                    Text {
-                        text: source
-                    }
-                }
+                delegate: playlistDelegate
                 highlight: Rectangle { color: "#f0f0f0"; }
                 ScrollIndicator.vertical: ScrollIndicator { }
             }
         }
+
+        RowLayout {
+            Dial {
+                id: volumeDial
+                from: 0
+                to: 100
+                value: 100
+            }
+        }
+    }
+
+    DropArea {
+        id: drop
+        anchors.fill: gd
+        onDropped: {
+
+        }
+    }
+
+    Component {
+        id: playlistDelegate
+        ItemDelegate {
+            width: ListView.view.width
+            height: c.height
+            highlighted: ListView.isCurrentItem
+            RowLayout {
+                id: c
+                spacing: 4
+                width: parent.width
+                Text {
+                    Layout.fillWidth: true
+                    text: source
+                }
+            }
+            onClicked: {
+                ListView.currentIndex=index;
+            }
+            onDoubleClicked: {
+                setMediaFile(index)
+            }
+        }
+    }
+
+    function setMediaFile(i) {
+        plist.currentIndex=i;
+        mp.pause();
+        plist.playbackMode=Playlist.CurrentItemOnce
     }
 
     function selectMediaFile() {

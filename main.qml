@@ -53,33 +53,8 @@ ApplicationWindow {
         return [h,m,ss].map(v => v < 10 ? "0" + v : v).join(":")
     }
 
-    Window {
+    VideoWindow {
         id: videoWindow
-        width: 1280
-        height: 768
-        visible: true
-        visibility: Window.Windowed
-        screen: Qt.application.screens[1] // xxx
-
-        Rectangle {
-            id: videoBg
-            anchors.fill: parent
-            color: "black"
-        }
-
-        VideoOutput {
-            id: vo
-            source: mp
-            anchors.fill: parent
-            autoOrientation: true
-
-            MouseArea {
-                anchors.fill: parent
-                onDoubleClicked: {
-                    videoWindow.visibility=videoWindow.visibility==Window.Windowed ? Window.FullScreen : Window.Windowed
-                }
-            }
-        }
     }
 
     StackView {
@@ -141,6 +116,15 @@ ApplicationWindow {
         onStatusChanged: console.debug(status)
     }
 
+
+    NumberAnimation {
+        id: volumeFadeIn
+        target: mp
+        property: "name"
+        duration: 1000
+        easing.type: Easing.InOutQuad
+    }
+
     Playlist {
         id: plist
         playbackMode: Playlist.CurrentItemOnce
@@ -157,7 +141,7 @@ ApplicationWindow {
         PageMain {
             id: mainPage
             onBgblackChanged: {
-                videoBg.color=bgblack ? "black" : "green"
+                videoWindow.color=bgblack ? "black" : "green"
             }
         }
     }
