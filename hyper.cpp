@@ -1,6 +1,6 @@
 #include "hyper.h"
 
-hyper::hyper(QObject *parent) :
+CuteHyper::CuteHyper(QObject *parent) :
     QObject(parent),
     m_connections(0),
     m_tc(0),    
@@ -18,28 +18,28 @@ hyper::hyper(QObject *parent) :
     connect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
-void hyper::setStatus(QString status)
+void CuteHyper::setStatus(QString status)
 {
     m_status=status;
     emit statusChanged();
 }
 
-void hyper::setTimecode(int tc)
+void CuteHyper::setTimecode(int tc)
 {
     m_tc=tc;
 }
 
-void hyper::setDuration(int du)
+void CuteHyper::setDuration(int du)
 {
     m_clip_len=du;
 }
 
-void hyper::setClips(int clips)
+void CuteHyper::setClips(int clips)
 {
     m_clips=clips;
 }
 
-void hyper::writeResponse(QTcpSocket *con, QString key, QString val)
+void CuteHyper::writeResponse(QTcpSocket *con, QString key, QString val)
 {
     con->write(key.toLocal8Bit());
     con->write(": ");
@@ -47,7 +47,7 @@ void hyper::writeResponse(QTcpSocket *con, QString key, QString val)
     con->write("\r\n");
 }
 
-void hyper::writeResponse(QTcpSocket *con, QString key, bool val)
+void CuteHyper::writeResponse(QTcpSocket *con, QString key, bool val)
 {
     con->write(key.toLocal8Bit());
     con->write(": ");
@@ -55,7 +55,7 @@ void hyper::writeResponse(QTcpSocket *con, QString key, bool val)
     con->write("\r\n");
 }
 
-void hyper::writeResponse(QTcpSocket *con, QString key, int val)
+void CuteHyper::writeResponse(QTcpSocket *con, QString key, int val)
 {
     con->write(key.toLocal8Bit());
     con->write(": ");
@@ -63,7 +63,7 @@ void hyper::writeResponse(QTcpSocket *con, QString key, int val)
     con->write("\r\n");
 }
 
-void hyper::onReadyRead()
+void CuteHyper::onReadyRead()
 {
     QTcpSocket *con = qobject_cast<QTcpSocket*>(sender());
 
@@ -224,7 +224,7 @@ void hyper::onReadyRead()
         }
     }
 }
-void hyper::disconnectRemoteAccess() {
+void CuteHyper::disconnectRemoteAccess() {
     QTcpSocket *con = qobject_cast<QTcpSocket*>(sender());
 
     qDebug() << "Remote disconnected" << con->peerAddress();
@@ -234,7 +234,7 @@ void hyper::disconnectRemoteAccess() {
     m_connections--;
 }
 
-void hyper::newConnection() {
+void CuteHyper::newConnection() {
     if (m_connections<10) {
         QTcpSocket *tmp = m_server->nextPendingConnection();
 

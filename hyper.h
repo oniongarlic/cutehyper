@@ -6,7 +6,7 @@
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 
-class hyper : public QObject
+class CuteHyper : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString status MEMBER m_status NOTIFY statusChanged)
@@ -14,7 +14,7 @@ class hyper : public QObject
     Q_PROPERTY(int loop MEMBER m_loop NOTIFY loopChanged)
 
 public:
-    explicit hyper(QObject *parent = nullptr);
+    explicit CuteHyper(QObject *parent = nullptr);
 
     Q_INVOKABLE void setStatus(QString status);
     Q_INVOKABLE void setTimecode(int tc);

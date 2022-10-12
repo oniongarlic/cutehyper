@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    qmlRegisterType<hyper>("org.tal.hyperhyper", 1, 0, "HyperServer");
+    qmlRegisterType<CuteHyper>("org.tal.hyperhyper", 1, 0, "HyperServer");
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
